@@ -1,0 +1,8 @@
+위에 센서
+밑에 Channel 기준
+
+Vcc GND CS CLK MISO MOSI
+
+-------------------------------
+
+Vcc, MOSI는 3.3V에 연결
