@@ -94,8 +94,7 @@ def dxl_pos_read():
 	    pub2.publish(theta_des)
 	 
             dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID,ADDR_PRO_GOAL_POSITION, dxl_goal_position)
-            #dxl_present_position, dxl_comm_result, dxl_error = packetHandler.read4ByteTxRx(portHandler, DXL_ID, ADDR_PRO_PRESENT_POSITION)
-	    t_pre = cur
+            t_pre = cur
 
 	    if(abs(theta_des)>1.3):
 		dxl_goal_position = 2048
