@@ -1,17 +1,22 @@
 // SPI Library
 #include <SPI.h>
 
-// Having two ADCs with pins 9 and 10
-// Having 7 channels for each ADC
-// CS[1] => Encoder & Rest Tactile
+// Having one encoder and two ADCs with pins 8, 9 and 10 respectively
+// Having 8 channels for each ADC
+// CS[0] => Encoder & Rest Tactile
 const int CS[3] = {8,9,10};
 const int n_channel = 5;
+// All data to be put into val array
 unsigned int val[n_channel+1]={0,0,0,0,0,0};
 int Hz = 1000;
+
 // Variables for read_Encoder
+// Declaring stack variable for moving average operation
 const int size_of_stack = 3;
 long stack[size_of_stack];
+// For masking the bits for encoder results
 word mask_results = 0b0011111111111111;
+
 // Declaring time variables for the sampling frequency
 unsigned long t1;
 unsigned long t2;
@@ -44,31 +49,42 @@ void loop()
   {
     for (int k = 0; k < n_channel; k++)
     {
-      // Putting all the values of the channels into the val array
+      // Putting all the values of the channels upto the second last of the val array
       val[k] = read_ADC(2,k+2);
     }
 
-    //Encoder
+    // Encoder
+    // Variables for the moving average operation
     long sum = 0;
     long avg;
+
+    // Reading the value from the read_Encoder function and masking the results
     val[n_channel] = read_Encoder(CS[0]) & mask_results;
+
+    // Summing all the values(except for the one in the current loop) stored in the stack
     for(int i = 0; i < size_of_stack; ++i)
     {
       sum += (long)stack[i];
     }
+    // Adding the value of the one in the current loop
     sum += val[n_channel];
+    
     // Averaging the result
     avg = (long)sum/size_of_stack;
+
+    // Moving the latest value(the one before the one in the current loop) of the encoder to the second latest slot
     for(int i = 1; i < size_of_stack; ++i)
     {
       stack[i] = stack[i-1];
     }
+
+    // Putting in the one in the current loop as the latest value in the stack
     stack[0] = val[n_channel];
     val[n_channel] = avg*(36000.0/16384.0);
    
     // Sending 2 bytes of data for each channel so n_channel*2 in total
     Serial.write((byte*)val,(n_channel+1)*2);
-    // Sending one more byte of data
+    // Sending one more byte of data for discretion purposes
     // So has to receive n_channel*2 + 1 bytes of data from the receiver
     Serial.write('\n');
 
@@ -119,7 +135,7 @@ int read_ADC(int n_CS, int channel)
 }
 
 long read_Encoder(int cs) {
-  // Incoming byte from SPI
+  // Declaring incoming byte from SPI
   byte inByte = 0x00;  
   byte inByte2 = 0x00;
   long value = 0;
