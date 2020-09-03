@@ -13,7 +13,7 @@ long offset[n_channel];
 long value[n_channel];
 // Giving initial variables to the cpp file
 // Name set as FSS
-HX711 FSS(n_channel, DOUT, CLK); //엠프 핀 선언 
+HX711 FSS(n_channel, DOUT, CLK);
 
 void setup() {
   Serial.begin(115200);
