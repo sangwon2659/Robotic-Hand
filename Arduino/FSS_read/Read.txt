@@ -1,0 +1,2 @@
+4 FSS Sensors
+All connected to same VCC, GND and SCK
