@@ -2,7 +2,7 @@
 #include "HX711.h" //HX711로드셀 엠프 관련함수 호출
 
 #define calibration_factor 256.00 // 로드셀 스케일 값 선언
-#define CLK  2  //엠프 클락 핀 넘버 
+#define CLK  2  //엠프 클락 핀 넘버
 #define CLK_2 3
 #define CLK_3 4
 #define CLK_4 5
@@ -11,7 +11,7 @@
 #define DOUT_3 8
 #define DOUT_4 9
 
-HX711 scale(DOUT, CLK); //엠프 핀 선언 
+HX711 scale(DOUT, CLK); //엠프 핀 선언
 HX711 scale2(DOUT_2, CLK_2);
 HX711 scale3(DOUT_3, CLK_3);
 HX711 scale4(DOUT_4, CLK_4);
@@ -23,7 +23,8 @@ long stack[size_of_stack];
 word mask_results = 0b0011111111111111;
 unsigned int result = 0;
 
-int32_t value[5] = {0};
+int Total_pin_num = 5;
+long value[5] = {0};
 
 void setup() {
   Serial.begin(115200);  // 시리얼 통신 개방
@@ -32,7 +33,7 @@ void setup() {
   scale2.set_scale(calibration_factor);
   scale3.set_scale(calibration_factor);
   scale4.set_scale(calibration_factor);
-  scale.tare(); 
+  scale.tare();
   scale2.tare();
   scale3.tare();
   scale4.tare(); //스케일 설정
@@ -50,12 +51,12 @@ void setup() {
 void loop() {
   long sum = 0;
   long avg = 0;
-  
+ 
   value[0] = scale.get_value(1);
   value[1] = scale2.get_value(1);
   value[2] = scale3.get_value(1);
   value[3] = scale4.get_value(1);
-  
+ 
   result = read_Encoder(cs) & mask_results;
   for(int i=0; i < size_of_stack; i++){
     sum += (long)stack[i];
@@ -69,12 +70,13 @@ void loop() {
   stack[0] = result;
   value[4] = avg*(36000.0/16384.0);
 
-  for(int i=0; i<4; i++){
-    Serial.print(value[i]);
-    Serial.print("\t");
-  }
-  Serial.println(value[4]);
- 
+  //for(int i=0; i<(Total_pin_num-1); i++){
+    //Serial.print(value[i]);
+    //Serial.print("\t");
+  //}
+  //Serial.println(value[Total_pin_num-1]);
+  Serial.write((byte*)value,20);
+  Serial.write('\n');
 }
 
 long read_Encoder(int cs) {
