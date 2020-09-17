@@ -24,6 +24,7 @@ word mask_results = 0b0011111111111111;
 unsigned int result = 0;
 
 int Total_pin_num = 5;
+// Negative 범위로도 값 있어서 long으로 
 long value[5] = {0};
 
 void setup() {
