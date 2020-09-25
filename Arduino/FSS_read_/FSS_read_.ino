@@ -18,6 +18,7 @@ int32_t value[4] = {0};
 // For offset setting purposes
 int offsetBuffer[4] = {0};
 double sumBuffer[4] = {0};
+unsigned long time;
 
 // 객체 선언
 HX711 scale_0(doutPin[0], clkPin[0]);
@@ -55,17 +56,21 @@ void setup() {
 }
 
 void loop() {
-//  value[0] = scale_0.get_value();
-//  value[1] = scale_1.get_value();
-//  value[2] = scale_2.get_value();
-//  value[3] = scale_3.get_value();
-
-  // Printing the value array after obtaining the values using the interrupt functions
-  for(int i = 0; i < (numPin-1); i++){
-    Serial.print(value[i]);
-    Serial.print("\t");
+  
+  time = millis();
+  
+  if(time-millis() > 20){
+    Serial.write((byte*)value,numPin*4);
+    Serial.write("\t");
   }
-  Serial.println(value[numPin-1]);
+  
+  
+//   Printing the value array after obtaining the values using the interrupt functions
+//   for(int i = 0; i < (numPin-1); i++){
+//     Serial.print(value[i]);
+//     Serial.print("\t");
+//   }
+//   Serial.println(value[numPin-1]);
   
 }
 
