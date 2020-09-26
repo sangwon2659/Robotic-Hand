@@ -60,12 +60,15 @@ long HX711::read() {
   uint8_t filler = 0x00;
 
   // Giving 8 pulses to the MISO and acquiring 8 bits of data for each pulse
+  // shiftIn -> byte incoming = shiftIn(dataPin, clockPin, bitOrder)
+  // MSB First to the incoming bits arranged from the left side of the byte
   // Saving the data to the data array
   data[2] = shiftIn(DOUT, PD_SCK, MSBFIRST);
   data[1] = shiftIn(DOUT, PD_SCK, MSBFIRST);
   data[0] = shiftIn(DOUT, PD_SCK, MSBFIRST);
 
   // Sending additional pulse to the sensor according to the gain value
+  // Sending additional pulse ensures the MISO-like signal to be HIGH
   for (unsigned int i = 0; i < GAIN; i++) {
     digitalWrite(PD_SCK, HIGH);
     digitalWrite(PD_SCK, LOW);
