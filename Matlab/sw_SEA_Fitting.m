@@ -46,12 +46,16 @@ for i = 1 : length(varname)
     Data_i.(varname(i))=interp1(Data.(['t_' char(varname(i))]),Data.(varname(i)),t_range);
 end
 
+% Converting the raw data of FT sensor to respective units
 FT_res = [1/32 1/32 1/32 1/1504 1/1504 1/1504];
 Data_i.FT_r = Data_i.FT_f.*FT_res;
 
 %% Calibration
+% Filtering to obtain only positive values of the change in angle (taking mean from 50 to 100)
 Delta_SEA = max(-(Data_i.tact(:,6)-mean(Data_i.tact(50:100,6))),0);
+% No filtering for the change in torque
 Delta_FT = Data_i.FT_r(:,6) - mean(Data_i.FT_r(50 : 100,6));
+% Fitting using linear relationship for delta_SEA vs. delta_torque expected to have linear relationship
 ft_linear = fittype('a1*x','indep','x');
 cell_fit_linear = fit(Delta_SEA,Delta_FT,...
     ft_linear, 'StartPoint',[0.5], 'Robust','LAR','MaxIter',10000);
