@@ -66,7 +66,6 @@ void loop() {
     Serial.write("\n");
   }
   
-  
 //   Printing the value array after obtaining the values using the interrupt functions
 //   for(int i = 0; i < (numPin-1); i++){
 //     Serial.print(value[i]);
@@ -88,7 +87,7 @@ void read_value_0(){
     offsetBuffer[0] += 1;
   }
   // digitalRead == LOW for stable read of FALLING
-  // Why sumBuffer*2 has not been identified
+  // Why sumBuffer has to be *2 has yet been identified
   else if(offsetBuffer[0] == 21 && digitalRead(doutPin[0]) == LOW){
     value[0] = scale_0.get_value() - 2*(sumBuffer[0]);
   }  
