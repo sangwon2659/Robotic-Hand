@@ -61,7 +61,9 @@ void loop() {
   
   if(time-millis() > 20){
     Serial.write((byte*)value,numPin*4);
-    Serial.write("\t");
+    // Serial.write("\t") for Serial.print on monitor screen
+    // Has to be "\n" for it to be read as single lines on the ROS segment
+    Serial.write("\n");
   }
   
   
