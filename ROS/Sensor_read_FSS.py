@@ -28,8 +28,10 @@ def thread_run():
 
 def talker():
 	global value, pub
-
+	
+	# Declaring publisher with topic name 'tact' and message name 'tactile'
 	pub = rospy.Publisher('tact', tactile, queue_size=1)
+	# Initializing the node with the name 'talker'
 	rospy.init_node('talker', anonymous=True)
 
 	ser.reset_input_buffer()
