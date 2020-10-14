@@ -1,4 +1,5 @@
 #include "HX711.h"
+#include <SPI.h>
 #define calibration_factor 256.00
 
 // The sensor designed to send pulses to MISO-like at 80Hz
@@ -7,7 +8,8 @@
 // In order to avoid this, interrupt pins have been used
 // DOUT from sensor was connected to both the interrupt pin and the MISO-like pin
 
-int numPin = 4;
+int numPin = 5;
+// Declaration for FSS sensors
 // intPin for interrupt pins in Arduino mega
 int intPin[4] = {2,3,18,19};
 // MOSI-like pins not clk pins to be exact
@@ -26,8 +28,18 @@ HX711 scale_1(doutPin[1], clkPin[1]);
 HX711 scale_2(doutPin[2], clkPin[2]);
 HX711 scale_3(doutPin[3], clkPin[3]);
 
+// Declaration for the encoder
+const int cs = 1;
+const int size_of_stack = 3;
+long stack[size_of_stack];
+long value;
+
+word mask_results = 0b0011111111111111;
+
 void setup() {
   Serial.begin(115200);
+
+  // Setup for the FSS sensors
   // Interrupt pins set mode as input over here where the MISO-like pins declared in .cpp
   for(int i = 0; i < numPin; i++){
     pinMode(intPin[i], INPUT);
@@ -53,6 +65,31 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(intPin[1]), read_value_1, FALLING);
   attachInterrupt(digitalPinToInterrupt(intPin[2]), read_value_2, FALLING);
   attachInterrupt(digitalPinToInterrupt(intPin[3]), read_value_3, FALLING);
+
+  // Setup for the encoder
+  // Beginning SPI communication
+  SPI.begin();
+
+  // Transmission with Most Significant Bit first and with mode_1
+  // ClockDivider can be considered as the transmission or receiving rate
+  SPI.setBitOrder(MSBFIRST);
+  SPI.setDataMode(SPI_MODE1);
+  SPI.setClockDivider(10);
+
+  // Different spiSettings set when multi-channel but only one in this case so 주석
+  // SPISettings spiSettings(1000000, MSBFIRST, SPI_MODE1);
+  // SPI.beginTransaction(spiSettings);
+
+  // Declaring pinmode and giving high voltage for deactivation
+  pinMode(cs,OUTPUT);
+  digitalWrite(cs,HIGH);
+
+  // Defining the stack for averaging purposes
+  for(int i = 0; i < size_of_stack; ++i)
+  {
+    stack[i] = 0;
+  }
+
 }
 
 void loop() {
@@ -60,10 +97,35 @@ void loop() {
   time = millis();
 
   if(time-millis() > 20){
+    long sum = 0;
+    long avg;
+
+    // Only taking the useful data
+    value = readRegister(cs) & mask_results;
+    for(int i = 0; i < size_of_stack-1; ++i)
+    {
+      sum += (long)stack[i];
+    }
+    sum += value;
+    // Averaging the result
+    avg = (long)sum/size_of_stack;
+
+    // Converting the data to degrees
+    Serial.println(avg*360.0/16363.0);
+
+    // Making a new set of stack
+    for(int i = 1; i < size_of_stack; ++i)
+    {
+      stack[i] = stack[i-1];
+    }
+    stack[0] = value;
+    delayMicroseconds(10);
+
     Serial.write((byte*)value,numPin*4);
     // Serial.write("\t") for Serial.print on monitor screen
     // Has to be "\n" for it to be read as single lines on the ROS segment
     Serial.write("\n");
+  }
   }
 
 //   Printing the value array after obtaining the values using the interrupt functions
@@ -133,4 +195,31 @@ void read_value_3(){
   else if(offsetBuffer[3] == 21 && digitalRead(doutPin[3]) == LOW){
     value[3] = scale_3.get_value() - 2*(sumBuffer[3]);
   }
+}
+
+long readRegister(int cs) {
+  // Incoming byte from SPI
+  byte inByte = 0x00;
+  byte inByte2 = 0x00;
+  long result = 0;
+
+  // Beginning Transmission
+  digitalWrite(cs, LOW);
+  delayMicroseconds(10);
+
+  // SPI.transfer used for sending and receiving data
+  // No need to give any data to the slave so 0x00
+  // Suppose to give all 1s but substituted doing this by connecting the MOSI with 3.3V
+  inByte = SPI.transfer(0x00);
+  inByte2 = SPI.transfer(0x00);
+
+  // Combining the byte with the previous one:
+  // | compares each bit and gives 1 if 1 is in either data
+  // << 8 moves the bits to the left by 8 spaces
+  result = inByte << 8 | inByte2;
+
+  // Giving high voltage for deacctivation
+  digitalWrite(cs, HIGH);
+  delayMicroseconds(10);
+  return result;
 }
