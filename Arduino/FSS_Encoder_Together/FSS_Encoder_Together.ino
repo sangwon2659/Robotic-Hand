@@ -16,7 +16,7 @@ int intPin[4] = {2,3,18,19};
 int clkPin[4] = {4,6,8,10};
 // MISO-like pins
 int doutPin[4] = {5,7,9,11};
-int32_t value[4] = {0};
+int32_t value[5] = {0};
 // For offset setting purposes
 int offsetBuffer[4] = {0};
 double sumBuffer[4] = {0};
@@ -29,113 +29,12 @@ HX711 scale_2(doutPin[2], clkPin[2]);
 HX711 scale_3(doutPin[3], clkPin[3]);
 
 // Declaration for the encoder
-const int cs = 1;
+const int cs = 12;
 const int size_of_stack = 3;
 long stack[size_of_stack];
-long value;
+long value_;
 
 word mask_results = 0b0011111111111111;
-
-void setup() {
-  Serial.begin(115200);
-
-  // Setup for the FSS sensors
-  // Interrupt pins set mode as input over here where the MISO-like pins declared in .cpp
-  for(int i = 0; i < numPin; i++){
-    pinMode(intPin[i], INPUT);
-  }
-
-  // Setting scale and offset
-  // Offset not used in .cpp but offset set instead in the interrupt functions
-  scale_0.set_scale(calibration_factor);
-  scale_0.tare();
-  Serial.println(scale_0.OFFSET);
-  scale_1.set_scale(calibration_factor);
-  scale_1.tare();
-  Serial.println(scale_1.OFFSET);
-  scale_2.set_scale(calibration_factor);
-  scale_2.tare();
-  Serial.println(scale_2.OFFSET);
-  scale_3.set_scale(calibration_factor);
-  scale_3.tare();
-  Serial.println(scale_3.OFFSET);
-
-  // Declaring the intpins as interrupt pins and declaring the initiating functions
-  attachInterrupt(digitalPinToInterrupt(intPin[0]), read_value_0, FALLING);
-  attachInterrupt(digitalPinToInterrupt(intPin[1]), read_value_1, FALLING);
-  attachInterrupt(digitalPinToInterrupt(intPin[2]), read_value_2, FALLING);
-  attachInterrupt(digitalPinToInterrupt(intPin[3]), read_value_3, FALLING);
-
-  // Setup for the encoder
-  // Beginning SPI communication
-  SPI.begin();
-
-  // Transmission with Most Significant Bit first and with mode_1
-  // ClockDivider can be considered as the transmission or receiving rate
-  SPI.setBitOrder(MSBFIRST);
-  SPI.setDataMode(SPI_MODE1);
-  SPI.setClockDivider(10);
-
-  // Different spiSettings set when multi-channel but only one in this case so 주석
-  // SPISettings spiSettings(1000000, MSBFIRST, SPI_MODE1);
-  // SPI.beginTransaction(spiSettings);
-
-  // Declaring pinmode and giving high voltage for deactivation
-  pinMode(cs,OUTPUT);
-  digitalWrite(cs,HIGH);
-
-  // Defining the stack for averaging purposes
-  for(int i = 0; i < size_of_stack; ++i)
-  {
-    stack[i] = 0;
-  }
-
-}
-
-void loop() {
-
-  time = millis();
-
-  if(time-millis() > 20){
-    long sum = 0;
-    long avg;
-
-    // Only taking the useful data
-    value = readRegister(cs) & mask_results;
-    for(int i = 0; i < size_of_stack-1; ++i)
-    {
-      sum += (long)stack[i];
-    }
-    sum += value;
-    // Averaging the result
-    avg = (long)sum/size_of_stack;
-
-    // Converting the data to degrees
-    Serial.println(avg*360.0/16363.0);
-
-    // Making a new set of stack
-    for(int i = 1; i < size_of_stack; ++i)
-    {
-      stack[i] = stack[i-1];
-    }
-    stack[0] = value;
-    delayMicroseconds(10);
-
-    Serial.write((byte*)value,numPin*4);
-    // Serial.write("\t") for Serial.print on monitor screen
-    // Has to be "\n" for it to be read as single lines on the ROS segment
-    Serial.write("\n");
-  }
-  }
-
-//   Printing the value array after obtaining the values using the interrupt functions
-//   for(int i = 0; i < (numPin-1); i++){
-//     Serial.print(value[i]);
-//     Serial.print("\t");
-//   }
-//   Serial.println(value[numPin-1]);
-
-}
 
 // Functions to be initiated with the interrupts
 void read_value_0(){
@@ -223,3 +122,107 @@ long readRegister(int cs) {
   delayMicroseconds(10);
   return result;
 }
+
+void setup() {
+  Serial.begin(115200);
+
+  // Setup for the FSS sensors
+  // Interrupt pins set mode as input over here where the MISO-like pins declared in .cpp
+  for(int i = 0; i < numPin; i++){
+    pinMode(intPin[i], INPUT);
+  }
+
+  // Setting scale and offset
+  // Offset not used in .cpp but offset set instead in the interrupt functions
+  scale_0.set_scale(calibration_factor);
+  scale_0.tare();
+  Serial.println(scale_0.OFFSET);
+  scale_1.set_scale(calibration_factor);
+  scale_1.tare();
+  Serial.println(scale_1.OFFSET);
+  scale_2.set_scale(calibration_factor);
+  scale_2.tare();
+  Serial.println(scale_2.OFFSET);
+  scale_3.set_scale(calibration_factor);
+  scale_3.tare();
+  Serial.println(scale_3.OFFSET);
+
+  // Declaring the intpins as interrupt pins and declaring the initiating functions
+  attachInterrupt(digitalPinToInterrupt(intPin[0]), read_value_0, FALLING);
+  attachInterrupt(digitalPinToInterrupt(intPin[1]), read_value_1, FALLING);
+  attachInterrupt(digitalPinToInterrupt(intPin[2]), read_value_2, FALLING);
+  attachInterrupt(digitalPinToInterrupt(intPin[3]), read_value_3, FALLING);
+
+  // Setup for the encoder
+  // Beginning SPI communication
+  SPI.begin();
+
+  // Transmission with Most Significant Bit first and with mode_1
+  // ClockDivider can be considered as the transmission or receiving rate
+  SPI.setBitOrder(MSBFIRST);
+  SPI.setDataMode(SPI_MODE1);
+  SPI.setClockDivider(10);
+
+  // Different spiSettings set when multi-channel but only one in this case so 주석
+  // SPISettings spiSettings(1000000, MSBFIRST, SPI_MODE1);
+  // SPI.beginTransaction(spiSettings);
+
+  // Declaring pinmode and giving high voltage for deactivation
+  pinMode(cs,OUTPUT);
+  digitalWrite(cs,HIGH);
+
+  // Defining the stack for averaging purposes
+  for(int i = 0; i < size_of_stack; ++i)
+  {
+    stack[i] = 0;
+  }
+
+}
+
+void loop() {
+
+  time = millis();
+
+  if(time-millis() > 20){
+    long sum = 0;
+    long avg;
+
+    // Only taking the useful data
+    value_ = readRegister(cs) & mask_results;
+    for(int i = 0; i < size_of_stack-1; ++i)
+    {
+      sum += (long)stack[i];
+    }
+    sum += value_;
+    // Averaging the result
+    avg = (long)sum/size_of_stack;
+
+    // Converting the data to degrees
+    Serial.println(avg*360.0/16363.0);
+
+    // Making a new set of stack
+    for(int i = 1; i < size_of_stack; ++i)
+    {
+      stack[i] = stack[i-1];
+    }
+    stack[0] = value[numPin];
+    delayMicroseconds(10);
+    
+
+    //Serial.write((byte*)value,numPin*4);
+    // Serial.write("\t") for Serial.print on monitor screen
+    // Has to be "\n" for it to be read as single lines on the ROS segment
+    //Serial.write("\n");
+
+    Serial.println(value[4]);
+  }
+  }
+
+//   Printing the value array after obtaining the values using the interrupt functions
+//   for(int i = 0; i < (numPin-1); i++){
+//     Serial.print(value[i]);
+//     Serial.print("\t");
+//   }
+//   Serial.println(value[numPin-1]);
+
+
