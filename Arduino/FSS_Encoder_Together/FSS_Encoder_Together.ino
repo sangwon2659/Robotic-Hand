@@ -30,8 +30,6 @@ HX711 scale_3(doutPin[3], clkPin[3]);
 
 // Declaration for the encoder
 const int cs = 12;
-const int size_of_stack = 3;
-long stack[size_of_stack];
 long value_;
 
 word mask_results = 0b0011111111111111;
@@ -172,11 +170,6 @@ void setup() {
   digitalWrite(cs,HIGH);
 
   // Defining the stack for averaging purposes
-  for(int i = 0; i < size_of_stack; ++i)
-  {
-    stack[i] = 0;
-  }
-
 }
 
 void loop() {
@@ -189,32 +182,21 @@ void loop() {
 
     // Only taking the useful data
     value_ = readRegister(cs) & mask_results;
-    for(int i = 0; i < size_of_stack-1; ++i)
-    {
-      sum += (long)stack[i];
-    }
-    sum += value_;
-    // Averaging the result
-    avg = (long)sum/size_of_stack;
+    value_ = (long)value_*(36000.0/16384);
 
-    // Converting the data to degrees
-    Serial.println(avg*360.0/16363.0);
+    value[numPin-1] = value_;
 
-    // Making a new set of stack
-    for(int i = 1; i < size_of_stack; ++i)
-    {
-      stack[i] = stack[i-1];
+    for(int i=0;i<numPin-1;i++){
+      Serial.print(value[i]);
+      Serial.print("\t");
     }
-    stack[0] = value[numPin];
-    delayMicroseconds(10);
+    Serial.println(value[numPin-1]);
     
 
     //Serial.write((byte*)value,numPin*4);
     // Serial.write("\t") for Serial.print on monitor screen
     // Has to be "\n" for it to be read as single lines on the ROS segment
     //Serial.write("\n");
-
-    Serial.println(value[4]);
   }
   }
 
