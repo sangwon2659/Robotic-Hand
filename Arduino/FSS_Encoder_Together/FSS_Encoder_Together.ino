@@ -192,11 +192,10 @@ void loop() {
     }
     Serial.println(value[numPin-1]);
     
-
-    //Serial.write((byte*)value,numPin*4);
+    Serial.write((byte*)value,numPin*4);
     // Serial.write("\t") for Serial.print on monitor screen
     // Has to be "\n" for it to be read as single lines on the ROS segment
-    //Serial.write("\n");
+    Serial.write("\n");
   }
   }
 
