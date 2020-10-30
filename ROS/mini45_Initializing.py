@@ -3,7 +3,7 @@
 import time
 import serial
 import rospy
-ser = serial.Serial(port = '/dev/ttyUSB0',baudrate=115200)
+ser = serial.Serial(port = '/dev/ttyUSB3',baudrate=115200)
 # ser.open()
 ser.write('CB\r') # Communication for ASCII
 time.sleep(0.01)
@@ -24,7 +24,7 @@ if response == '>CD A\r\n':
     print('Communication with ASCII')
 else:
     print('Communication with ASCII error, try again')
-
+'''  
 ser.write('CV 20\r') # Mode selection of Resolved force/torque
 time.sleep(0.01)
 response = ser.readline()
@@ -33,8 +33,7 @@ if response == '>CV 20\r\n':
     print('Only Resolved Z axis torque(unit : count)')
 else:
     print('mode selection of resolved torque error, try again')
-
-
+'''
 
 ser.write('CD R\r') # Communication for Resolved force/torque
 time.sleep(0.01)
@@ -45,45 +44,70 @@ if response == '>CD R\r\n':
 else:
     print('Communication with Resolved torque error, try again')
 
-ser.write('SA 8\r') # Moving average fillter 0 2 4 8 16 32 64 128
+ser.write('SA 16\r') # Moving average fillter 0 2 4 8 16 32 64 128
 time.sleep(0.01)
 response = ser.readline()
-if response == '>SA 8\r\n':
+if response == '>SA 16\r\n':
     response = ser.readline()
 
-    print('Moving average fillter : 8')
+    print('Moving average fillter : 16')
 else:
     print('Moving average fillter error, try again')
 
-
+''' 
 ser.write('ST 1\r') # Temperature compensation
 time.sleep(0.01)
 response = ser.readline()
 response = ser.readline()
-
-ser.write('SF 1000\r') 
+'''
+''' 
+ser.write('TF 0\r')
 time.sleep(0.01)
 response = ser.readline()
 response = ser.readline()
 
+ser.write('TC 1, ROD, -35, 0, 164, 0, 0, 0\r')
+time.sleep(0.01)
+response = ser.readline()
+print(response)
+response = ser.readline()
 
+ser.write('TF 1\r')
+time.sleep(0.01)
+response = ser.readline()
+response = ser.readline()
+'''
+''' 
+ser.write('SF 1000\r') 
+time.sleep(0.01)
+response = ser.readline()
+response = ser.readline()
+'''
+ 
 ser.write('SZ\r') # Sensor Zero bias
 time.sleep(0.01)
 response = ser.readline()
 response = ser.readline()
 
-for i in range(3):# remove biaS
+for i in range(3): # remove bias
     ser.write('SB\r') # fill the buffer
     time.sleep(0.01)
     response = ser.readline()
     response = ser.readline()
-    
+print('Bias calibration has done')
+ 
 ser.write('SU\r') # remove bias
 time.sleep(0.01)
 response = ser.readline()
 response = ser.readline()
 
+ 
+ser.write(chr(20))
+#response = ser.readline()
+response = ser.readline()
+print(response)
 print('Complete for removing bias')
+
 
 ser.write('SP 1\r') # Peak level monitoring
 time.sleep(0.01)
@@ -93,5 +117,4 @@ response = ser.readline()
 #
 
 print('Complete for Initializing.............')
-
 
