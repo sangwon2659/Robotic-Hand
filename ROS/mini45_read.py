@@ -37,29 +37,36 @@
 ## to the 'chatter' topic
 
 import rospy
+import numpy as np
 import time
 import serial
 from std_msgs.msg import Float64
 from msgpkg.msg import msgtor
+from msgpkg.msg import tactile
 
-ser = serial.Serial(port = '/dev/ttyUSB0',baudrate=115200)
+ser = serial.Serial(port = '/dev/ttyUSB3',baudrate=115200)
 
 def talker():
-    pub = rospy.Publisher('torque', msgtor, queue_size=5)
-    rospy.init_node('talker', anonymous=True)
-    rate = rospy.Rate(1000) # 10hz
+    #pub = rospy.Publisher('torque', msgtor, queue_size=5)
+    pub = rospy.Publisher('FT', tactile, queue_size=5)
+    rospy.init_node('Mini45', anonymous=True)
+    #rate = rospy.Rate(1000) # 10hz
+    res = np.array([1./2., 1./2., 1./2., 1./94., 1./94., 1./188.])/.8
 
     while not rospy.is_shutdown():
-        #ser.write(chr(20))
-        ser.write('')  # Communication for Resolved force/torque
-        #response = ser.readline()
-        #response = ser.readline()
+        ser.write(chr(20))
+        #ser.write('^T')  # Communication for Resolved force/torque
         response = ser.readline()
-        where = response.find(',')
-        va = float(response[where+1:])/188/8 #/2/8  #/188/8
+	response = response[:-2].split(',')
+	response = map(float, response)
+	response = np.array(response[1:])
+	print(response*res)
+	pub.publish(response)
+        #where = response.find(',')
+        #va = float(response[where+1:])/188/8 #/2/8  #/188/8
 	#value = float(ser.readline())
-        rospy.loginfo(va)
-        pub.publish(va)
+        #rospy.loginfo(va)
+        #pub.publish(va)
         #rate.sleep()
 
 
