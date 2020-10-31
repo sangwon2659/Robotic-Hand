@@ -1,9 +1,0 @@
-sudoedit /etc/udev/rules.d/50-ttyusb.rules
-KERNEL=="ttyUSB[0-9]*",NAME="tts/USB%n",SYMLINK+="%k",GROUP="uucp",MODE="0666"
-
-udevadm info --name=/dev/ttyACMx --attribute-walk
-KERNEL=="ttyUSB*",ATTRS{idVendor}=="1a86",ATTRS{idProduct}=="7523",MODE:="0666",SYMLINK+="xRMRobotSP"
-sudo udevadm trigger
-
-sudo chmod 777 /dev/ttyUSB*
-sudo chmod a+rw /dev/ttyACM*
