@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+'''
+Receives data from FSS sensor (or the "/tact" topic)
+Decides whether touching or not using the SVM model in the sav file
+Publishes the result as a "/touch" topic
+'''
 import rospy
 import numpy as np
 import pickle
