@@ -39,13 +39,15 @@ def callback(data):
 		for i in range(n_ch):
 			result = touch(offset(i),buffer_[i])
 			result_.append(result)
+		pub.publish(result_)
 		rospy.loginfo(result_)
 
 def talklistener():
+	global pub
 	rospy.init_node('touch', anonymous=True)	
+	pub = rospy.Publisher('touch', tactile, queue_size = 10)	
 	rospy.Subscriber("tact", tactile, callback)
 	rospy.spin()
-	#pub = rospy.Publisher('touch', Int32, queue_size=10)
 
 def offset(channel):
 	sum = 0
@@ -65,7 +67,6 @@ if __name__ == '__main__':
 	except rospy.ROSInterruptException:
 		pass
 		
-
 
 
 
